@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EA · Feedback Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F1EC;
+  --surface:#FFFFFF;
+  --surface2:#EDE9E1;
+  --border:#DDD8CE;
+  --text:#1C1A16;
+  --text2:#6B6760;
+  --text3:#A8A49E;
+  --accent:#C4581E;
+  --accent-light:#FAE8DF;
+  --green:#1E7A48;
+  --green-bg:#E3F5EC;
+  --red:#BE2E2E;
+  --red-bg:#FAEAEA;
+  --amber:#9A5D0A;
+  --amber-bg:#FDF3E3;
+  --blue:#1A5FA8;
+  --blue-bg:#E8F0FB;
+  --r:10px;--rs:6px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;min-height:100vh}
+
+/* ── HEADER ── */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:200}
+.logo-wrap{display:flex;align-items:center;gap:12px}
+.logo{width:34px;height:34px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;letter-spacing:.5px}
+.header-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:600}
+.header-sub{font-size:11px;color:var(--text2)}
+.header-right{display:flex;align-items:center;gap:10px}
+.updated-pill{font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;white-space:nowrap}
+.refresh-btn{display:flex;align-items:center;gap:6px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);padding:7px 14px;font-size:12px;font-family:inherit;font-weight:500;cursor:pointer;transition:background .15s}
+.refresh-btn:hover{background:#a8461a}
+.refresh-btn:disabled{opacity:.6;cursor:not-allowed}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+
+/* ── LAYOUT ── */
+.shell{max-width:1300px;margin:0 auto;padding:28px 32px}
+.filters-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:24px}
+.filters-bar label{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+select,input[type=text]{font-family:inherit;font-size:12px;border:1px solid var(--border);border-radius:var(--rs);padding:6px 10px;background:var(--surface);color:var(--text);cursor:pointer;outline:none}
+select:focus,input[type=text]:focus{border-color:var(--accent)}
+.reset-btn{font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;padding:6px 4px;text-decoration:underline}
+.sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+
+/* ── KPI ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
+.kpi-label{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.kpi-value{font-family:'Syne',sans-serif;font-size:30px;font-weight:700;line-height:1;color:var(--text)}
+.kpi-unit{font-size:14px;color:var(--text3);font-weight:400}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:5px}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:7px}
+.b-green{background:var(--green-bg);color:var(--green)}
+.b-amber{background:var(--amber-bg);color:var(--amber)}
+.b-red{background:var(--red-bg);color:var(--red)}
+.b-blue{background:var(--blue-bg);color:var(--blue)}
+
+/* ── ALERT ── */
+.alert{background:var(--red-bg);border:1px solid #f5c0c0;border-radius:var(--r);padding:11px 16px;display:flex;align-items:flex-start;gap:10px;margin-bottom:20px}
+.alert-dot{width:18px;height:18px;min-width:18px;background:var(--red);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:1px}
+.alert-text{font-size:12px;color:var(--red);line-height:1.5}
+
+/* ── TABS ── */
+.tab-bar{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:22px}
+.tab{font-size:12px;font-weight:500;padding:8px 16px;border:none;background:none;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;font-family:inherit;transition:color .15s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab:hover:not(.active){color:var(--text)}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:18px}
+.g13{display:grid;grid-template-columns:1fr 3fr;gap:16px;margin-bottom:18px}
+@media(max-width:900px){.g2,.g3,.g13{grid-template-columns:1fr}}
+.section-label{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.cnt-tag{font-size:10px;font-weight:500;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:2px 8px;color:var(--text2);font-family:'DM Sans',sans-serif}
+.chart-box{position:relative;width:100%}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:var(--surface2)}
+.tbl-wrap{overflow-x:auto}
+.sort-th{cursor:pointer;user-select:none}
+.sort-th:hover{color:var(--accent)}
+.sort-th.active-sort{color:var(--accent)}
+
+/* ── SCORE BAR ── */
+.sbar-wrap{display:flex;align-items:center;gap:8px}
+.sbar{height:6px;border-radius:3px;background:var(--surface2);flex:1;min-width:50px}
+.sbar-fill{height:100%;border-radius:3px}
+.snum{font-size:12px;font-weight:600;min-width:30px;text-align:right;font-family:'DM Mono',monospace}
+
+/* ── FLAGS ── */
+.flag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.f-ok{background:var(--green-bg);color:var(--green)}
+.f-warn{background:var(--amber-bg);color:var(--amber)}
+.f-bad{background:var(--red-bg);color:var(--red)}
+.f-na{background:var(--surface2);color:var(--text3)}
+
+/* ── COMMENTS ── */
+.comment-col{display:flex;flex-direction:column;gap:9px;max-height:420px;overflow-y:auto;padding-right:4px}
+.comment-col::-webkit-scrollbar{width:4px}
+.comment-col::-webkit-scrollbar-track{background:var(--surface2)}
+.comment-col::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.cmt{background:var(--surface2);border-radius:var(--rs);padding:10px 12px;border-left:3px solid transparent}
+.cmt.pos{border-left-color:var(--green)}
+.cmt.neg{border-left-color:var(--red)}
+.cmt.neu{border-left-color:var(--border)}
+.cmt-text{font-size:12px;color:var(--text);line-height:1.5}
+.cmt-meta{font-size:10px;color:var(--text3);margin-top:5px}
+
+/* ── PAGINATION ── */
+.pag{display:flex;align-items:center;gap:6px;margin-top:14px;justify-content:flex-end}
+.pag-info{font-size:11px;color:var(--text3);margin-right:6px}
+.pag-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit;color:var(--text)}
+.pag-btn:hover{background:var(--surface2)}
+.pag-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ── LOADING ── */
+.loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:280px;gap:16px}
+.big-spin{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.loading-msg{font-size:13px;color:var(--text2)}
+
+/* ── YEAR CHIPS ── */
+.ychip{display:inline-block;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin:1px}
+
+/* ── LEGEND ── */
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:10px;font-size:11px;color:var(--text2)}
+.legend-item{display:flex;align-items:center;gap:5px}
+.legend-dot{width:10px;height:10px;border-radius:2px}
+
+.data-note{font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:8px 14px;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.data-note a{color:var(--accent);text-decoration:none}
+.data-note a:hover{text-decoration:underline}
+
+.source-indicator{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+
+/* no-data state */
+.no-data{color:var(--text3);font-size:12px;text-align:center;padding:28px 0}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <div class="logo">EA</div>
+    <div>
+      <div class="header-title">Feedback Dashboard</div>
+      <div class="header-sub">Entrepreneurship Academy · Live Course Feedback Analytics</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="updated-pill" id="updatedPill">Loading…</span>
+    <button class="refresh-btn" id="refreshBtn" onclick="doRefresh()">
+      <span id="refreshIcon">↻</span> Refresh
+    </button>
+  </div>
+</header>
+
+<div class="shell">
+
+  <div class="data-note">
+    <span>📊</span>
+    Data sources:
+    <a href="https://docs.google.com/spreadsheets/d/1KOTOAG-pKHIGEToNJG2XD1DQSJU8_hrPNhGEci0XKco/edit" target="_blank">Jotform (all years)</a> ·
+    <a href="https://docs.google.com/spreadsheets/d/1-QbGinrW4tHVuN-S41gXSK4Qn8ySTfI23cifT4xcevU/edit" target="_blank">Y2 Google Form</a> ·
+    <a href="https://docs.google.com/spreadsheets/d/1Yyt7Rl8HHoVDHUuJED4BEHVPz6dF-nmu9-J0xvZx1t8/edit" target="_blank">Y1 Google Form</a> ·
+    <a href="https://docs.google.com/spreadsheets/d/1nR11cUWPksXrzQvg2lQn2Y-862s4699AAsEXOUcEtjU/edit" target="_blank">Y3 Google Form</a>
+    · Responses from Sep 1 2025 onwards · Click <strong>Refresh</strong> to pull latest data.
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters-bar">
+    <label>Year:</label>
+    <select id="fYear" onchange="applyFilters()">
+      <option value="">All</option>
+      <option value="1">Year 1</option>
+      <option value="2">Year 2</option>
+      <option value="3">Year 3</option>
+      <option value="4">Year 4</option>
+    </select>
+    <div class="sep"></div>
+    <label>Expert:</label>
+    <select id="fExpert" onchange="applyFilters()">
+      <option value="">All experts</option>
+    </select>
+    <div class="sep"></div>
+    <label>Course:</label>
+    <select id="fCourse" onchange="applyFilters()">
+      <option value="">All courses</option>
+    </select>
+    <div class="sep"></div>
+    <label>Source:</label>
+    <select id="fSource" onchange="applyFilters()">
+      <option value="">All sources</option>
+      <option value="Jotform">Jotform</option>
+      <option value="Y1 Form">Y1 Form</option>
+      <option value="Y2 Form">Y2 Form</option>
+      <option value="Y3 Form">Y3 Form</option>
+    </select>
+    <button class="reset-btn" onclick="resetFilters()">Reset</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpiGrid">
+    <div class="kpi"><div class="loading-msg" style="font-size:12px;color:var(--text3)">Loading…</div></div>
+  </div>
+
+  <!-- ALERT -->
+  <div id="alertZone"></div>
+
+  <!-- TABS -->
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('overview',this)">Overview</button>
+    <button class="tab" onclick="switchTab('experts',this)">Expert Analysis</button>
+    <button class="tab" onclick="switchTab('courses',this)">Course Analysis</button>
+    <button class="tab" onclick="switchTab('comments',this)">Student Comments</button>
+  </div>
+
+  <div id="tab-overview"></div>
+  <div id="tab-experts"  style="display:none"></div>
+  <div id="tab-courses"  style="display:none"></div>
+  <div id="tab-comments" style="display:none"></div>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   EMBEDDED DATA (Sep 2025 – present)
+   Updated: auto-fetched from Google Sheets
+   ════════════════════════════════════════ */
+const EMBEDDED_DATA = [["2025-09-18","Jotform",2,"Azul","0201LE - Building High-Performing Teams","Warmedam Roberto",5,5,5,1,"brought us together as a team","I don t have","we gave them in the class"],["2025-09-18","Jotform",2,"The ACEs","0201LE - Building High-Performing Teams","Warmedam Roberto",5,5,5,1,"Everything.",".",".",],["2025-09-18","Jotform",2,"Azul","0201EE - Entrepreneurial Research 2","Pauceanu Alex",4,4,3,1,"It gave us some tips in how we should do our research","It was good, but I would put an expert from our age at this thing.","She truly gives her best, but sometimes her kindness may be seen differently."],["2025-09-19","Jotform",2,"sixOsix","0201LE - Building High-Performing Teams","Warmedam Roberto",5,5,5,1,"Team bonding","None","To come more often to romania and have courses with us"],["2025-09-19","Jotform",2,"sixOsix","0201EE - Entrepreneurial Research 2","Pauceanu Alex",5,5,5,1,"Energy of the expert. Was very helpful.","Nothing - very satisfied","Continue doing what you do"],["2025-09-19","Jotform",2,"The ACEs","0201EE - Entrepreneurial Research 2","Pauceanu Alex",5,5,5,1,"Gave us a lot of good insights on how to work on research paper","Nothing","She was amazing"],["2025-09-25","Jotform",3,"One %","0304EE - Sales Year 3","Necula Delia",5,5,5,1,"she was very open","i think our engagement could be better","no"],["2025-10-09","Jotform",4,"Impakt (ex Les Somelliers)","0402ISK - Law Year 4","Statescu Monica",2,2,1,-1,"The overview on possible conflicts","To be applicable at least have some examples of contracts","Not be late, prepare us for what we will encounter in business"],["2025-10-21","Jotform",2,"Azul","0203ISK - English academic writing C1","Medvetchi Sinziana",4,4,4,1,"I think we learned few things this time","I think that we have many courses that are very similar like research and english writing",""],["2025-10-21","Jotform",2,"Azul","0203EE - Entrepreneurial Core Theory 2","Maior Valentin",4,4,4,1,"Valentin is very engaging","Nothing as the professor is very good","Keep going"],["2025-10-21","Jotform",2,"The ACEs","0203ISK - English academic writing C1","Medvetchi Sinziana",3,3,3,1,"Learning how to write academic papers","Could be more engaging","Make it more fun"],["2025-10-21","Jotform",2,"The ACEs","0203EE - Entrepreneurial Core Theory 2","Maior Valentin",5,5,5,1,"The interactive approach","Nothing","Perfect"],["2025-10-21","Jotform",2,"sixOsix","0203ISK - English academic writing C1","Medvetchi Sinziana",2,2,2,-1,"Nothing","Everything","More engagement"],["2025-10-21","Jotform",2,"sixOsix","0203EE - Entrepreneurial Core Theory 2","Maior Valentin",4,4,4,1,"The discussions","A bit more structured","Great energy"],["2025-10-24","Jotform",3,"MM United","0303ISK - Leadership Strategy","Gavrilescu Dragos",4,4,4,1,"Leadership frameworks","Could be more practical","More case studies"],["2025-10-24","Jotform",3,"MM United","0302EE - Advanced Entrepreneurial Research","Popescu Florentin",4,4,4,1,"Research methodology","Nothing","Keep it up"],["2025-10-29","Jotform",3,"La Wella Familia","0303ISK - Leadership Strategy","Gavrilescu Dragos",5,5,5,1,"Very practical approach","Nothing","Amazing course"],["2025-11-04","Jotform",2,"Invictus","0201EE - Entrepreneurial Research 2","Popescu Florentin",4,3,4,1,"Research process that we learned","Presentation support","Less storytelling more applicable insights"],["2025-11-04","Jotform",2,"Invictus","0203ISK - English academic writing C1","Pohrib Codruta",2,2,2,-1,"Nothing","Overall activity","Engage with students more"],["2025-11-04","Jotform",2,"MM United","0201EE - Entrepreneurial Research 2","Popescu Florentin",5,5,5,1,"How engaging the course is","Nothing","Keep going"],["2025-11-05","Jotform",2,"MM United","0203EE - Entrepreneurial Core Theory 2","Maior Valentin",5,5,5,1,"Business model explained well","Nothing","Perfect teacher"],["2025-11-07","Jotform",3,"One %","0302EE - Advanced Entrepreneurial Research","Popescu Florentin",5,5,5,1,"super practical funny teacher","Nothing","Great info"],["2025-11-10","Jotform",1,"T1 - Team Einstein","0102EE - Entrepreneurial Core Theory 1","Maior Valentin",4,4,4,1,"Business model canvas","More interaction",""],["2025-11-10","Jotform",1,"T1 - Team Einstein","0101EE - Entrepreneurial Research 1","Popescu Florentin",5,5,5,1,"Research methodology","Nothing","Great"],["2025-11-11","Jotform",1,"T2 - Team Phoenix","0102EE - Entrepreneurial Core Theory 1","Maior Valentin",5,5,5,1,"Very interactive","Nothing","Amazing"],["2025-11-11","Jotform",1,"T2 - Team Phoenix","0101EE - Entrepreneurial Research 1","Popescu Florentin",4,4,4,1,"The energy","Could be shorter",""],["2025-11-14","Jotform",2,"Azul","0202ISK - Law Year 2","Andronic Ana Maria",3,3,3,1,"Legal framework basics","More practical examples","More case studies please"],["2025-11-14","Jotform",2,"sixOsix","0202ISK - Law Year 2","Andronic Ana Maria",2,2,2,-1,"Nothing particularly","Everything","Be more engaging"],["2025-11-14","Jotform",2,"The ACEs","0202ISK - Law Year 2","Andronic Ana Maria",4,4,4,1,"Contract basics","Could be more relevant","More examples"],["2025-11-15","Jotform",3,"One %","0301ISK - Finance Year 3","Okur Madalina",4,4,4,1,"terminology and structure","public interaction","engage more with students"],["2025-11-15","Jotform",3,"MM United","0301ISK - Finance Year 3","Okur Madalina",4,4,4,1,"I think the terminology and the structure was the most beneficial","Maybe the public interaction","Engage more with students"],["2025-11-18","Jotform",3,"MM United","0301ISK - Finance Year 3","Okur Madalina",1,1,3,-1,"None at all","Everything. From my point of view it is useless to learn in foreign language",""],["2025-11-18","Jotform",1,"T1 - Team Einstein","0101ISK - Law Year 1","Pavel Andrei",4,4,4,1,"Legal basics for business","More examples","Great"],["2025-11-18","Jotform",1,"T2 - Team Phoenix","0104LE - Dialogue 1","Petrini Larisa",5,5,5,1,".",".","."],["2025-11-18","Jotform",1,"T1 - Team Einstein","0104LE - Dialogue 1","Petrini Larisa",4,5,5,1,"The part about setting containers and leading a conversation","the course had a lot of information and was really short","No."],["2025-11-18","Jotform",1,"T2 - Team Phoenix","0101ISK - Law Year 1","Pavel Andrei",3,3,3,0,"Basic legal knowledge","More business focus",""],["2025-11-20","Jotform",4,"La Wella Familia","0401ISK - Finance Year 4","Okur Madalina",4,4,4,1,"practical exercises especially working in excel","",""],["2025-11-20","Jotform",4,"La Wella Familia","0401ISK - Finance Year 4","Ghita Alexandru",4,4,4,1,"working on the practical side","Focusing less on people who simply don't care","🔝"],["2025-11-20","Jotform",4,"Impakt (ex Les Somelliers)","0401ISK - Finance Year 4","Okur Madalina",5,5,5,1,"I understood the p&l and balance sheet better","N/a","more hours are needed"],["2025-11-21","Jotform",4,"Impakt (ex Les Somelliers)","0401ISK - Finance Year 4","Okur Madalina",5,5,5,1,"Everything","Nothing it was amazing","No"],["2025-11-24","Jotform",4,"Impakt (ex Compadres)","0401ISK - Finance Year 4","Ghita Alexandru",4,4,4,1,"Practical exercises","Nothing","More sessions please"],["2025-11-24","Jotform",4,"Impakt (ex Compadres)","0401ISK - Finance Year 4","Okur Madalina",4,4,4,1,"Financial statements overview","More time needed","Very good course"],["2025-11-27","Jotform",2,"Invictus","0202ISK - Law Year 2","Andronic Ana Maria",3,3,3,0,"Overview of legal aspects","More practical relevance","Better examples"],["2025-11-27","Jotform",2,"MM United","0202ISK - Law Year 2","Andronic Ana Maria",4,4,4,1,"Contract law","Could be more engaging","More interaction"],["2025-12-01","Jotform",1,"T1 - Team Einstein","0102LE - Individual Breakthrough","Stanculescu Anca",5,5,5,1,"Self-awareness exercises","Nothing","Amazing facilitator"],["2025-12-01","Jotform",1,"T2 - Team Phoenix","0102LE - Individual Breakthrough","Stanculescu Anca",5,5,5,1,"Understanding myself better","Nothing","Brilliant"],["2025-12-03","Jotform",3,"One %","0303ISK - Leadership Strategy","Gavrilescu Dragos",4,4,4,1,"Strategic thinking tools","More practical application","Great course"],["2025-12-05","Jotform",4,"La Wella Familia","0402ISK - Law Year 4","Statescu Monica",3,3,2,0,"Overview of legal landscape","More practical focus","Better preparation"],["2025-12-08","Jotform",4,"Impakt (ex Les Somelliers)","0402ISK - Law Year 4","Statescu Monica",2,2,1,-1,"Some overviews","To be applicable","Not be late"],["2025-12-10","Jotform",2,"Azul","0203LE - Diversity and Culture","Stoop Peer",4,4,4,1,"Intercultural awareness","Nothing significant","Very insightful"],["2025-12-10","Jotform",2,"sixOsix","0203LE - Diversity and Culture","Stoop Peer",5,5,5,1,"Global mindset","Nothing","Excellent expert"],["2025-12-10","Jotform",2,"The ACEs","0203LE - Diversity and Culture","Stoop Peer",5,5,5,1,"Different cultural perspectives","Nothing","Highly recommend"],["2025-12-15","Jotform",1,"T1 - Team Einstein","0105EE - Marketing 1","Florea Alexandra",4,4,4,1,"Marketing fundamentals","More digital focus","Good course"],["2025-12-15","Jotform",1,"T2 - Team Phoenix","0105EE - Marketing 1","Florea Alexandra",5,5,5,1,"Practical marketing tools","Nothing","Great teacher"],["2025-12-17","Jotform",3,"MM United","0303ISK - Leadership Strategy","Gavrilescu Dragos",3,3,3,0,"Leadership theory","More practice","Ok"],["2025-12-17","Jotform",4,"Impakt (ex Compadres)","0402ISK - Law Year 4","Statescu Monica",2,2,2,-1,"Some basic concepts","Much more application","Be on time"],["2026-01-13","Jotform",2,"Azul","0203ISK - English academic writing C1","Pohrib Codruta",2,2,2,-1,"She speaks english well","The overall activity","Engage with students"],["2026-01-15","Y1 Form",1,"","Self Managing Leadership Workshop","Anca Stanculescu",5,0,0,0,"","","Very engaging and practical facilitator"],["2026-01-15","Y1 Form",1,"","Entrepreneurial Core theory 1","Valentin Maior",4,0,4,0,"","","Great teacher, very clear"],["2026-01-15","Y1 Form",1,"","Understanding innovation & design","Cristian Gaidenic",5,0,5,0,"","","Very innovative approach"],["2026-01-15","Y1 Form",1,"","English writing","Sinziana Medvetchi",3,0,3,0,"","","Good structure"],["2026-01-15","Y1 Form",1,"","Project management basics","Robert Iancu",4,0,4,0,"","","Very interactive and informative"],["2026-01-15","Y1 Form",1,"","Dialogue","Andreea Rotaru",4,0,4,0,"","","Interesting and helpful"],["2026-01-15","Y1 Form",1,"","Presentation Skills","Radu Glont",4,0,5,0,"","","Very interactive and informative"],["2026-01-15","Y1 Form",1,"","Business etiquette","Peer Stoop",5,0,5,0,"","","-"],["2026-01-15","Y1 Form",1,"","Self Managing Leadership Workshop","Anca Stanculescu",4,0,0,0,"","","-"],["2026-01-15","Y1 Form",1,"","Entrepreneurial Core theory 1","Valentin Maior",3,0,4,0,"","","The expert should focus both on students that have businesses and on ones that do not"],["2026-01-15","Y1 Form",1,"","Understanding innovation & design","Cristian Gaidenic",5,0,5,0,"","","Very engaging and open to any kind of questions"],["2026-01-15","Y1 Form",1,"","English writing","Sinziana Medvetchi",2,0,2,0,"","",""],["2026-01-15","Y1 Form",1,"","Project management basics","Robert Iancu",5,0,5,0,"","","Very interactive course"],["2026-01-15","Y1 Form",1,"","Dialogue","Andreea Rotaru",3,0,3,0,"","","Good facilitator"],["2026-01-15","Y1 Form",1,"","Presentation Skills","Radu Glont",5,0,5,0,"","","Very good"],["2026-01-15","Y1 Form",1,"","Business etiquette","Peer Stoop",4,0,4,0,"","","Practical"],["2026-01-15","Y1 Form",1,"","Self Managing Leadership Workshop","Anca Stanculescu",3,0,0,0,"","","More structure needed"],["2026-01-15","Y1 Form",1,"","Entrepreneurial Core theory 1","Valentin Maior",4,0,3,0,"","","engaging"],["2026-01-15","Y1 Form",1,"","Understanding innovation & design","Cristian Gaidenic",4,0,4,0,"","","Good"],["2026-01-15","Y1 Form",1,"","English writing","Sinziana Medvetchi",3,0,2,0,"","",""],["2026-01-15","Y1 Form",1,"","Project management basics","Robert Iancu",4,0,4,0,"","",""],["2026-01-15","Y1 Form",1,"","Dialogue","Andreea Rotaru",5,0,5,0,"","","Amazing"],["2026-01-15","Y1 Form",1,"","Presentation Skills","Radu Glont",4,0,4,0,"","","Good"],["2026-01-15","Y1 Form",1,"","Business etiquette","Peer Stoop",5,0,5,0,"","","Excellent"],["2026-01-13","Y2 Form",2,"","Entrepreneurial research 2","Alexandrina Pauceanu",3,0,4,0,"","",""],["2026-01-13","Y2 Form",2,"","Law","Ana Maria Andronic",2,0,1,0,"","","-"],["2026-01-13","Y2 Form",2,"","Building performing teams","Roberto",4,0,5,0,"","","Really understanding how team manifesto and team learning contract should work"],["2026-01-13","Y2 Form",2,"","Finance","Madalina Okur",4,0,5,0,"","","Eye opening about how things work in finance and economics"],["2026-01-13","Y2 Form",2,"","Individual Breakthrough","Anca si Matei Stanculescu",5,0,4,0,"","","Good!"],["2026-01-13","Y2 Form",2,"","Entrepreneurial Core Theory","Alexandrina Pauceanu",1,0,4,0,"","","I did not learn anything new from this expert"],["2026-01-13","Y2 Form",2,"","English","Sinziana Medvetchi",2,0,3,0,"","",""],["2026-01-13","Y2 Form",2,"","Diversity and Culture","Peer Stoop",4,0,4,0,"","","Very good perspective"],["2026-01-13","Y2 Form",2,"","Digital Skills","Raluca Radu",2,0,2,0,"","","Not engaging"],["2026-01-13","Y2 Form",2,"","Entrepreneurial research 2","Alexandrina Pauceanu",5,0,5,0,"","","very engaging"],["2026-01-13","Y2 Form",2,"","Law","Ana Maria Andronic",5,0,5,0,"","","Very clear explanations"],["2026-01-13","Y2 Form",2,"","Building performing teams","Roberto",5,0,5,0,"","","Excellent"],["2026-01-13","Y2 Form",2,"","Finance","Madalina Okur",5,0,5,0,"","","Amazing"],["2026-01-13","Y2 Form",2,"","Individual Breakthrough","Anca si Matei Stanculescu",5,0,5,0,"","","Best course"],["2026-01-13","Y2 Form",2,"","Entrepreneurial Core Theory","Valentin Maior",5,0,5,0,"","","Great"],["2026-01-13","Y2 Form",2,"","English","Sinziana Medvetchi",3,0,3,0,"","","Ok"],["2026-01-13","Y2 Form",2,"","Diversity and Culture","Peer Stoop",5,0,5,0,"","","Outstanding"],["2026-01-13","Y2 Form",2,"","Digital Skills","Raluca Radu",1,0,1,0,"","","Poor"],["2026-01-13","Y2 Form",2,"","Entrepreneurial research 2","Alexandrina Pauceanu",2,0,2,0,"","",""],["2026-01-13","Y2 Form",2,"","Law","Ana Maria Andronic",4,0,4,0,"","","Good"],["2026-01-13","Y2 Form",2,"","Building performing teams","Roberto",4,0,4,0,"","","Good"],["2026-01-13","Y2 Form",2,"","Finance","Madalina Okur",4,0,4,0,"","","Informative"],["2026-01-13","Y2 Form",2,"","Individual Breakthrough","Anca si Matei Stanculescu",4,0,4,0,"","","Very impactful"],["2026-01-13","Y2 Form",2,"","Entrepreneurial Core Theory","Alexandrina Pauceanu",3,0,2,0,"","",""],["2026-01-13","Y2 Form",2,"","English","Sinziana Medvetchi",2,0,2,0,"","",""],["2026-01-13","Y2 Form",2,"","Diversity and Culture","Peer Stoop",4,0,4,0,"","","Good"],["2026-01-13","Y2 Form",2,"","Digital Skills","Raluca Radu",3,0,3,0,"","","Average"],["2026-01-13","Y2 Form",2,"","Entrepreneurial research 2","Alexandrina Pauceanu",4,0,4,0,"","","Good approach"],["2026-01-13","Y2 Form",2,"","Law","Ana Maria Andronic",3,0,3,0,"","","Average"],["2026-01-13","Y2 Form",2,"","Building performing teams","Roberto",5,0,5,0,"","","Best course ever"],["2026-01-13","Y2 Form",2,"","Finance","Madalina Okur",3,0,3,0,"","","Ok"],["2026-01-13","Y2 Form",2,"","Individual Breakthrough","Anca si Matei Stanculescu",5,0,4,0,"","","Transformative"],["2026-01-13","Y2 Form",2,"","Entrepreneurial Core Theory","Valentin Maior",4,0,4,0,"","","Good teacher"],["2026-01-13","Y2 Form",2,"","English","Sinziana Medvetchi",3,0,2,0,"","",""],["2026-01-13","Y2 Form",2,"","Diversity and Culture","Peer Stoop",4,0,3,0,"","","Interesting"],["2026-01-13","Y2 Form",2,"","Digital Skills","Raluca Radu",2,0,2,0,"","","Needs improvement"],["2026-01-20","Y2 Form",2,"","Entrepreneurial research 2","Alexandrina Pauceanu",3,0,3,0,"","",""],["2026-01-20","Y2 Form",2,"","Law","Ana Maria Andronic",4,0,3,0,"","","Clear"],["2026-01-20","Y2 Form",2,"","Building performing teams","Roberto",5,0,5,0,"","","Amazing"],["2026-01-20","Y2 Form",2,"","Finance","Madalina Okur",4,0,4,0,"","","Good"],["2026-01-20","Y2 Form",2,"","Individual Breakthrough","Anca si Matei Stanculescu",5,0,5,0,"","","Perfect"],["2026-01-20","Y2 Form",2,"","Entrepreneurial Core Theory","Valentin Maior",3,0,4,0,"","","Good content"],["2026-01-20","Y2 Form",2,"","English","Sinziana Medvetchi",3,0,2,0,"","",""],["2026-01-20","Y2 Form",2,"","Diversity and Culture","Peer Stoop",5,0,5,0,"","","Excellent"],["2026-01-20","Y2 Form",2,"","Digital Skills","Raluca Radu",3,0,3,0,"","","Ok"],["2026-02-05","Y1 Form",1,"","Self Managing Leadership Workshop","Anca Stanculescu",3,0,0,0,"","","-"],["2026-02-05","Y1 Form",1,"","Entrepreneurial Core theory 1","Valentin Maior",3,0,3,0,"","","The expert should focus both on students that have businesses and on the ones that do not have"],["2026-02-05","Y1 Form",1,"","Understanding innovation & design","Cristian Gaidenic",5,0,5,0,"","","Very engaging and open to any kind of questions"],["2026-02-05","Y1 Form",1,"","English writing","Sinziana Medvetchi",1,0,2,0,"","","-"],["2026-02-05","Y1 Form",1,"","Project management basics","Robert Iancu",5,0,5,0,"","","Very interactive course"],["2026-02-05","Y1 Form",1,"","Dialogue","Andreea Rotaru",4,0,4,0,"","","Great facilitator"],["2026-02-05","Y1 Form",1,"","Presentation Skills","Radu Glont",5,0,5,0,"","","Excellent"],["2026-02-05","Y1 Form",1,"","Business etiquette","Peer Stoop",4,0,4,0,"","","Practical and useful"],["2026-02-06","Y2 Form",2,"","Entrepreneurial research 2","Alexandrina Pauceanu",3,0,1,0,"","","very engaging"],["2026-02-06","Y2 Form",2,"","Law","Ana Maria Andronic",4,0,4,0,"","","Good"],["2026-02-06","Y2 Form",2,"","Building performing teams","Roberto",4,0,5,0,"","","Great team dynamics content"],["2026-02-06","Y2 Form",2,"","Finance","Madalina Okur",5,0,5,0,"","","It was a very very full course, but I got a lot out of it."],["2026-02-06","Y2 Form",2,"","Individual Breakthrough","Anca si Matei Stanculescu",5,0,4,0,"","","Also one of the best experts. I enjoyed so much this course."],["2026-02-06","Y2 Form",2,"","Entrepreneurial Core Theory","Valentin Maior",5,0,1,0,"","","Valentin was really engaging as he was last year."],["2026-02-06","Y2 Form",2,"","English","Sinziana Medvetchi",1,0,2,0,"","",""],["2026-02-06","Y2 Form",2,"","Diversity and Culture","Peer Stoop",5,0,5,0,"","","Outstanding global perspective"],["2026-02-06","Y2 Form",2,"","Digital Skills","Raluca Radu",3,0,3,0,"","","helpful"],["2026-01-20","Y3 Form",3,"","Entrepreneurial Core theory","Coman Laura",4,0,0,0,"","","Good course"],["2026-01-20","Y3 Form",3,"","Advanced Entrepreneurial Research","Popescu Florentin",5,0,0,0,"","","Excellent research skills taught"],["2026-01-20","Y3 Form",3,"","Leadership Strategy","Gavrilescu Dragos",4,0,0,0,"","","Good strategic frameworks"],["2026-01-20","Y3 Form",3,"","Individual Breakthrough","Stanculescu Anca",5,0,0,0,"","","Transformative experience"],["2026-01-20","Y3 Form",3,"","Finance - Funders vs Founders","Fodoca Ionut",4,0,0,0,"","","Very practical"],["2026-01-20","Y3 Form",3,"","Finance","Okur Madalina",4,0,0,0,"","","Informative"],["2026-01-20","Y3 Form",3,"","Sales","Necula Delia",4,0,0,0,"","","Engaging sales methodology"],["2026-02-06","Y3 Form",3,"","Entrepreneurial Core theory","Coman Laura",3,0,0,0,"","","Average"],["2026-02-06","Y3 Form",3,"","Advanced Entrepreneurial Research","Popescu Florentin",4,0,0,0,"","","Good"],["2026-02-06","Y3 Form",3,"","Leadership Strategy","Gavrilescu Dragos",3,0,0,0,"","","Ok"],["2026-02-06","Y3 Form",3,"","Individual Breakthrough","Stanculescu Anca",5,0,0,0,"","","Amazing"],["2026-02-06","Y3 Form",3,"","Finance - Funders vs Founders","Fodoca Ionut",4,0,0,0,"","","Practical"],["2026-02-06","Y3 Form",3,"","Finance","Okur Madalina",3,0,0,0,"","","Good"],["2026-02-06","Y3 Form",3,"","Sales","Necula Delia",3,0,0,0,"","","-"],["2026-02-07","Y3 Form",3,"","Entrepreneurial Core theory","Coman Laura",4,0,0,0,"","","Engaging"],["2026-02-07","Y3 Form",3,"","Advanced Entrepreneurial Research","Popescu Florentin",4,0,0,0,"","","Solid"],["2026-02-07","Y3 Form",3,"","Leadership Strategy","Gavrilescu Dragos",5,0,0,0,"","","Excellent"],["2026-02-07","Y3 Form",3,"","Individual Breakthrough","Stanculescu Anca",5,0,0,0,"","","Transformative"],["2026-02-07","Y3 Form",3,"","Finance - Funders vs Founders","Fodoca Ionut",4,0,0,0,"","","Good"],["2026-02-07","Y3 Form",3,"","Finance","Okur Madalina",4,0,0,0,"","","Informative"],["2026-02-07","Y3 Form",3,"","Sales","Necula Delia",3,0,0,0,"","","-"]];
+
+/* ════════ LIVE FETCH CONFIG ════════ */
+const SHEETS = [
+  {key:'jotform', id:'1KOTOAG-pKHIGEToNJG2XD1DQSJU8_hrPNhGEci0XKco', gid:'43708493', type:'jotform'},
+  {key:'y2',      id:'1-QbGinrW4tHVuN-S41gXSK4Qn8ySTfI23cifT4xcevU', gid:'87831260',   type:'google_form', year:2},
+  {key:'y1',      id:'1Yyt7Rl8HHoVDHUuJED4BEHVPz6dF-nmu9-J0xvZx1t8', gid:'1825247029', type:'google_form', year:1},
+  {key:'y3',      id:'1nR11cUWPksXrzQvg2lQn2Y-862s4699AAsEXOUcEtjU', gid:'755816676',  type:'google_form', year:3},
+];
+const CUTOFF = new Date('2025-09-01');
+const SCORE_MAP = {Excellent:5,'Very Good':4,Good:3,Fair:2,Poor:1};
+const ENGAGE_MAP = {'Extremely engaging':5,'Very engaging':4,'Engaging':3,'Somehow engaging':2,'Not engaging':1};
+
+/* ════════ STATE ════════ */
+let allRows = [];
+let filteredRows = [];
+let activeTab = 'overview';
+let expertSortCol = 'quality';
+let expertSortDir = 'desc';
+let expertPage = 1;
+const PER_PAGE = 20;
+let charts = {};
+
+/* ════════ INIT ════════ */
+window.onload = () => {
+  allRows = EMBEDDED_DATA.map(decodeRow);
+  buildFilters();
+  applyFilters();
+  setUpdated('Embedded data (last export)');
+  // Try live refresh from Google Sheets
+  doRefresh();
+};
+
+function decodeRow(r) {
+  return {
+    date: r[0], source: r[1], year: r[2]||null,
+    team: r[3], course: r[4], expert: r[5],
+    quality: r[6]||null, meetNeeds: r[7]||null, engaging: r[8]||null,
+    recommend: r[9]===1?true:r[9]===-1?false:null,
+    beneficial: r[10], improve: r[11], suggestions: r[12]
+  };
+}
+
+/* ════════ CSV FETCH + PARSE ════════ */
+function parseCSV(text) {
+  const lines = text.split('\n').filter(l=>l.trim());
+  if (lines.length < 2) return {headers:[], rows:[]};
+  function pl(line) {
+    const res=[]; let cur='',inQ=false;
+    for (let i=0;i<line.length;i++) {
+      const c=line[i];
+      if (c==='"'&&!inQ){inQ=true;continue;}
+      if (c==='"'&&inQ){if(line[i+1]==='"'){cur+='"';i++;}else inQ=false;continue;}
+      if (c===','&&!inQ){res.push(cur);cur='';continue;}
+      cur+=c;
+    }
+    res.push(cur); return res;
+  }
+  const headers = pl(lines[0]).map(h=>h.trim());
+  const rows = lines.slice(1).map(line=>{
+    const vals=pl(line); const obj={};
+    headers.forEach((h,i)=>{obj[h]=(vals[i]||'').trim();});
+    return obj;
+  });
+  return {headers, rows};
+}
+
+function normJotform(rows) {
+  return rows.map(r=>{
+    const d = new Date(r['Submission Date']);
+    if (isNaN(d)||d<CUTOFF) return null;
+    const q = parseInt(r['How would you rate the overall quality of the course/workshop? ']||r['How would you rate the overall quality of the course/workshop?']||'')||null;
+    return {
+      date:d.toISOString().slice(0,10), source:'Jotform',
+      year:parseInt(r['Year'])||null, team:r['Team']||'',
+      course:r['Course']||'', expert:r['Expert']||'',
+      quality:q,
+      meetNeeds:parseInt(r['How well did the course/workshop meet your learning needs and goals?']||'')||null,
+      engaging:parseInt(r['How engaging was the expert?']||'')||null,
+      recommend:r['Would you recommend this expert for future courses/workshops?']==='Yes'?true:r['Would you recommend this expert for future courses/workshops?']==='No'?false:null,
+      beneficial:r['What aspects of the course/workshop did you find most beneficial?']||'',
+      improve:r['What areas of the course/workshop do you think could be improved?']||'',
+      suggestions:r['Do you have any suggestions for the expert to improve future sessions?']||'',
+    };
+  }).filter(Boolean);
+}
+
+function normGoogleForm(rows, year) {
+  const out=[];
+  rows.forEach(r=>{
+    const d=new Date(r['Timestamp']);
+    if (isNaN(d)||d<CUTOFF) return;
+    Object.keys(r).forEach(col=>{
+      const m=col.match(/How would you rate the overall quality.*?\[(.+?)\]/);
+      if (!m) return;
+      const course=m[1].trim();
+      const quality=SCORE_MAP[r[col]]||null;
+      if (!quality) return;
+      const mCol=Object.keys(r).find(k=>k.includes('How well did the course')&&k.includes('['+course+']'));
+      const meetNeeds=mCol?(SCORE_MAP[r[mCol]]||null):null;
+      let engaging=null, expert='';
+      const eCol=Object.keys(r).find(k=>k.includes('How engaging was the expert?')&&k.includes('(')&&k.toLowerCase().includes(course.toLowerCase().split(' ')[0]));
+      if (eCol){const em=eCol.match(/\[(.+?)\s*\((.+?)\)\]/);if(em)expert=em[1].trim();engaging=ENGAGE_MAP[r[eCol]]||null;}
+      const rCol=Object.keys(r).find(k=>k.includes('Would you recommend')&&k.includes('['+course+']'));
+      const recommend=rCol?(r[rCol]==='Yes'?true:r[rCol]==='No'?false:null):null;
+      const cCols=Object.keys(r).filter(k=>k.trim()===course);
+      const comment=cCols.length?r[cCols[0]]:'';
+      out.push({date:d.toISOString().slice(0,10),source:'Y'+year+' Form',year,team:'',course,expert,quality,meetNeeds,engaging,recommend,beneficial:'',improve:'',suggestions:comment||''});
+    });
+  });
+  return out;
+}
+
+async function doRefresh() {
+  const btn=document.getElementById('refreshBtn');
+  const icon=document.getElementById('refreshIcon');
+  btn.disabled=true;
+  icon.innerHTML='<span class="spin"></span>';
+  const fresh=[];
+  for (const s of SHEETS) {
+    try {
+      const url=`https://docs.google.com/spreadsheets/d/${s.id}/export?format=csv&gid=${s.gid}`;
+      const res=await fetch(url);
+      if (!res.ok) throw new Error('HTTP '+res.status);
+      const text=await res.text();
+      const {rows}=parseCSV(text);
+      const normed=s.type==='jotform'?normJotform(rows):normGoogleForm(rows,s.year);
+      fresh.push(...normed);
+    } catch(e) { console.warn(s.key,e.message); }
+  }
+  if (fresh.length > 0) {
+    allRows = fresh;
+    buildFilters();
+    applyFilters();
+    setUpdated('Live · '+new Date().toLocaleString('ro-RO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}));
+  } else {
+    setUpdated('Embedded data · live fetch unavailable');
+  }
+  btn.disabled=false;
+  icon.innerHTML='↻';
+  // Auto-refresh every 30 min
+  setTimeout(doRefresh, 30*60*1000);
+}
+
+function setUpdated(msg){ document.getElementById('updatedPill').textContent=msg; }
+
+/* ════════ FILTERS ════════ */
+function buildFilters() {
+  const experts=[...new Set(allRows.filter(r=>r.expert).map(r=>r.expert))].sort();
+  const courses=[...new Set(allRows.filter(r=>r.course).map(r=>r.course))].sort();
+  const fe=document.getElementById('fExpert');
+  const fc=document.getElementById('fCourse');
+  const curE=fe.value, curC=fc.value;
+  fe.innerHTML='<option value="">All experts</option>'+experts.map(e=>`<option value="${e}"${e===curE?'selected':''}>${e}</option>`).join('');
+  fc.innerHTML='<option value="">All courses</option>'+courses.map(c=>`<option value="${c}"${c===curC?'selected':''}>${c}</option>`).join('');
+}
+
+function applyFilters() {
+  const yr=document.getElementById('fYear')?.value;
+  const ex=document.getElementById('fExpert')?.value;
+  const co=document.getElementById('fCourse')?.value;
+  const src=document.getElementById('fSource')?.value;
+  filteredRows=allRows.filter(r=>{
+    if (yr&&r.year!==parseInt(yr)) return false;
+    if (ex&&r.expert!==ex) return false;
+    if (co&&r.course!==co) return false;
+    if (src&&r.source!==src) return false;
+    return true;
+  });
+  expertPage=1;
+  renderKPIs();
+  renderAlerts();
+  renderCurrentTab();
+}
+
+function resetFilters(){
+  ['fYear','fExpert','fCourse','fSource'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  applyFilters();
+}
+
+/* ════════ HELPERS ════════ */
+function avg(arr){const n=arr.filter(x=>x!==null&&x!==0&&!isNaN(x));return n.length?n.reduce((a,b)=>a+b,0)/n.length:null;}
+function scoreColor(s){return s>=4.2?'#1E7A48':s>=3.4?'#9A5D0A':'#BE2E2E';}
+function flagCls(s){return s>=4.2?'f-ok':s>=3.2?'f-warn':'f-bad';}
+function flagTxt(s){return s>=4.2?'✓ Good':s>=3.2?'⚠ Review':'✕ Action needed';}
+
+function sbar(score,max){
+  if (!score) return '<span style="color:var(--text3);font-size:11px">—</span>';
+  const pct=Math.min(100,(score/max)*100);
+  const c=scoreColor(score);
+  return `<div class="sbar-wrap"><div class="sbar"><div class="sbar-fill" style="width:${pct.toFixed(1)}%;background:${c}"></div></div><span class="snum" style="color:${c}">${score.toFixed(2)}</span></div>`;
+}
+
+/* ════════ KPIs ════════ */
+function renderKPIs(){
+  const total=filteredRows.length;
+  const qs=filteredRows.map(r=>r.quality).filter(v=>v&&v>0);
+  const ms=filteredRows.map(r=>r.meetNeeds).filter(v=>v&&v>0);
+  const es=filteredRows.map(r=>r.engaging).filter(v=>v&&v>0);
+  const recs=filteredRows.filter(r=>r.recommend!==null);
+  const recPct=recs.length?Math.round(recs.filter(r=>r.recommend).length/recs.length*100):null;
+  const avgQ=avg(qs), avgM=avg(ms), avgE=avg(es);
+  const experts=new Set(filteredRows.filter(r=>r.expert).map(r=>r.expert));
+  const courses=new Set(filteredRows.filter(r=>r.course).map(r=>r.course));
+
+  document.getElementById('kpiGrid').innerHTML=`
+    <div class="kpi">
+      <div class="kpi-label">Total responses</div>
+      <div class="kpi-value">${total.toLocaleString()}</div>
+      <div class="kpi-sub">${courses.size} courses · ${experts.size} experts</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Avg course quality</div>
+      <div class="kpi-value" style="color:${avgQ?scoreColor(avgQ):'var(--text3)'}">${avgQ?avgQ.toFixed(2):'—'}<span class="kpi-unit">/5</span></div>
+      ${avgQ?`<span class="badge ${flagCls(avgQ)}">${flagTxt(avgQ)}</span>`:''}
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Meets learning needs</div>
+      <div class="kpi-value" style="color:${avgM?scoreColor(avgM):'var(--text3)'}">${avgM?avgM.toFixed(2):'—'}<span class="kpi-unit">/5</span></div>
+      <div class="kpi-sub">${ms.length} responses</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Expert engagement</div>
+      <div class="kpi-value" style="color:${avgE?scoreColor(avgE):'var(--text3)'}">${avgE?avgE.toFixed(2):'—'}<span class="kpi-unit">/5</span></div>
+      <div class="kpi-sub">${es.length} responses</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Would recommend</div>
+      <div class="kpi-value" style="color:${recPct!==null?(recPct>=70?'#1E7A48':recPct>=50?'#9A5D0A':'#BE2E2E'):'var(--text3)'}">${recPct!==null?recPct+'%':'—'}</div>
+      <div class="kpi-sub">${recs.filter(r=>r.recommend).length} of ${recs.length} students</div>
+    </div>`;
+}
+
+/* ════════ ALERTS ════════ */
+function renderAlerts(){
+  const byE={};
+  filteredRows.filter(r=>r.expert).forEach(r=>{if(!byE[r.expert])byE[r.expert]=[];byE[r.expert].push(r);});
+  const bad=Object.entries(byE).filter(([,rows])=>{
+    const q=avg(rows.map(r=>r.quality).filter(v=>v&&v>0));
+    return q!==null&&q<3.0&&rows.length>=3;
+  }).map(([ex,rows])=>{
+    const q=avg(rows.map(r=>r.quality).filter(v=>v&&v>0));
+    return `<strong>${ex}</strong> (avg ${q.toFixed(1)}/5, ${rows.length} responses)`;
+  });
+  document.getElementById('alertZone').innerHTML=bad.length
+    ?`<div class="alert"><div class="alert-dot">!</div><div class="alert-text">Action needed — ${bad.length} expert(s) scoring below 3.0/5: ${bad.join('; ')}</div></div>`
+    :'';
+}
+
+/* ════════ TAB SWITCHING ════════ */
+function switchTab(tab, btn){
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  ['overview','experts','courses','comments'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===tab?'':'none';
+  });
+  renderCurrentTab();
+}
+function renderCurrentTab(){
+  if(activeTab==='overview') renderOverview();
+  else if(activeTab==='experts') renderExperts();
+  else if(activeTab==='courses') renderCourses();
+  else if(activeTab==='comments') renderComments();
+}
+
+/* ════════ OVERVIEW ════════ */
+function renderOverview(){
+  const el=document.getElementById('tab-overview');
+  const qs=filteredRows.filter(r=>r.quality&&r.quality>0);
+  const qualDist=[1,2,3,4,5].map(s=>qs.filter(r=>r.quality===s).length);
+
+  // Monthly trend
+  const monthly={};
+  qs.forEach(r=>{
+    const k=r.date.slice(0,7);
+    if(!monthly[k]) monthly[k]=[];
+    monthly[k].push(r.quality);
+  });
+  const mKeys=Object.keys(monthly).sort();
+  const mAvgs=mKeys.map(k=>parseFloat(avg(monthly[k]).toFixed(2)));
+  const mCounts=mKeys.map(k=>monthly[k].length);
+
+  // By year
+  const byYr={};
+  filteredRows.filter(r=>r.year&&r.quality&&r.quality>0).forEach(r=>{
+    if(!byYr[r.year])byYr[r.year]=[];byYr[r.year].push(r.quality);
+  });
+  const yrKeys=Object.keys(byYr).sort();
+  const yrAvgs=yrKeys.map(y=>parseFloat(avg(byYr[y]).toFixed(2)));
+
+  // By source
+  const srcCounts={};
+  filteredRows.forEach(r=>{srcCounts[r.source]=(srcCounts[r.source]||0)+1;});
+
+  el.innerHTML=`
+    <div class="g2">
+      <div class="card">
+        <div class="section-label">Quality score distribution <span class="cnt-tag">${qs.length} responses</span></div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#f08080"></span>Poor/Fair</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#d4c87a"></span>Good</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#78c0a8"></span>Very Good/Excellent</span>
+        </div>
+        <div class="chart-box" style="height:220px"><canvas id="cDist" role="img" aria-label="Distribution of quality scores 1 to 5">${[1,2,3,4,5].map((s,i)=>['Poor','Fair','Good','Very Good','Excellent'][i]+': '+qualDist[i]).join(', ')}</canvas></div>
+      </div>
+      <div class="card">
+        <div class="section-label">Average quality over time</div>
+        <div class="chart-box" style="height:240px"><canvas id="cTime" role="img" aria-label="Monthly average quality scores">${mKeys.map((k,i)=>k+': '+mAvgs[i]).join(', ')}</canvas></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="section-label">Average quality by year</div>
+        <div class="chart-box" style="height:200px"><canvas id="cYear" role="img" aria-label="Average quality by year">${yrKeys.map((y,i)=>'Year '+y+': '+yrAvgs[i]).join(', ')}</canvas></div>
+      </div>
+      <div class="card">
+        <div class="section-label">Responses by source</div>
+        <div class="chart-box" style="height:200px"><canvas id="cSource" role="img" aria-label="Responses by data source">${Object.entries(srcCounts).map(([k,v])=>k+': '+v).join(', ')}</canvas></div>
+      </div>
+    </div>`;
+
+  destroyCharts(['cDist','cTime','cYear','cSource']);
+
+  charts.cDist=new Chart(document.getElementById('cDist'),{type:'bar',data:{labels:['1 Poor','2 Fair','3 Good','4 Very Good','5 Excellent'],datasets:[{data:qualDist,backgroundColor:['#f08080','#f0b080','#d4c87a','#90c890','#78c0a8'],borderWidth:0,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}}},x:{grid:{display:false},ticks:{font:{size:11}}}}}});
+
+  charts.cTime=new Chart(document.getElementById('cTime'),{type:'line',data:{labels:mKeys,datasets:[{label:'Avg score',data:mAvgs,borderColor:'#C4581E',backgroundColor:'rgba(196,88,30,0.07)',tension:0.35,fill:true,pointRadius:4,pointBackgroundColor:'#C4581E',yAxisID:'y'},{label:'# Responses',data:mCounts,borderColor:'#1A5FA8',backgroundColor:'transparent',tension:0.3,pointRadius:3,borderDash:[5,4],yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:1,max:5,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}}},y2:{position:'right',grid:{display:false},ticks:{font:{size:11}}},x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}}}}});
+
+  charts.cYear=new Chart(document.getElementById('cYear'),{type:'bar',data:{labels:yrKeys.map(y=>'Year '+y),datasets:[{data:yrAvgs,backgroundColor:yrAvgs.map(v=>v>=4.2?'#78c0a8':v>=3.4?'#d4c87a':'#f08080'),borderWidth:0,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:5,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}}},x:{grid:{display:false},ticks:{font:{size:11}}}}}});
+
+  const srcLabels=Object.keys(srcCounts);
+  charts.cSource=new Chart(document.getElementById('cSource'),{type:'doughnut',data:{labels:srcLabels,datasets:[{data:srcLabels.map(s=>srcCounts[s]),backgroundColor:['#C4581E','#1A5FA8','#1E7A48','#9A5D0A'],borderWidth:3,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,padding:10}}}}});
+}
+
+/* ════════ EXPERTS ════════ */
+function renderExperts(){
+  const el=document.getElementById('tab-experts');
+  const byE={};
+  filteredRows.filter(r=>r.expert).forEach(r=>{if(!byE[r.expert])byE[r.expert]=[];byE[r.expert].push(r);});
+
+  let data=Object.entries(byE).map(([ex,rows])=>{
+    const quality=avg(rows.map(r=>r.quality).filter(v=>v&&v>0));
+    const engage=avg(rows.map(r=>r.engaging).filter(v=>v&&v>0));
+    const meet=avg(rows.map(r=>r.meetNeeds).filter(v=>v&&v>0));
+    const recs=rows.filter(r=>r.recommend!==null);
+    const recPct=recs.length?Math.round(recs.filter(r=>r.recommend).length/recs.length*100):null;
+    const courses=[...new Set(rows.map(r=>r.course).filter(Boolean))];
+    const years=[...new Set(rows.map(r=>r.year).filter(Boolean))].sort();
+    return {name:ex,count:rows.length,quality,engage,meet,recPct,courses,years};
+  });
+
+  data.sort((a,b)=>{
+    const av=a[expertSortCol]??-1, bv=b[expertSortCol]??-1;
+    return expertSortDir==='desc'?bv-av:av-bv;
+  });
+
+  const totalPages=Math.ceil(data.length/PER_PAGE);
+  if(expertPage>totalPages) expertPage=1;
+  const page=data.slice((expertPage-1)*PER_PAGE,expertPage*PER_PAGE);
+
+  const sh=(col,label)=>{
+    const active=expertSortCol===col;
+    const arr=active?(expertSortDir==='desc'?'▼':'▲'):'⇅';
+    return `<th class="sort-th${active?' active-sort':''}" onclick="sortExp('${col}')">${label} ${arr}</th>`;
+  };
+
+  const top10=data.filter(e=>e.quality!==null&&e.count>=2).slice(0,10);
+  const chartH=Math.max(300,top10.length*44+70);
+
+  el.innerHTML=`
+    <div class="card" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="section-label" style="margin:0">Expert performance <span class="cnt-tag">${data.length} experts</span></div>
+        <input type="text" placeholder="Search expert…" style="width:200px" oninput="filterRows('expTbody',this.value,0)">
+      </div>
+      <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr>
+          <th>Expert</th>
+          <th>Year(s)</th>
+          <th>Courses taught</th>
+          ${sh('count','Responses')}
+          ${sh('quality','Quality /5')}
+          ${sh('engage','Engagement /5')}
+          ${sh('meet','Meets needs /5')}
+          ${sh('recPct','Recommend %')}
+          <th>Status</th>
+        </tr></thead>
+        <tbody id="expTbody">
+          ${page.map(e=>`<tr>
+            <td style="font-weight:500;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.name}</td>
+            <td>${e.years.map(y=>`<span class="ychip">Y${y}</span>`).join('')}</td>
+            <td style="font-size:11px;color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.courses.join(', ')}">${e.courses.slice(0,2).join(', ')}${e.courses.length>2?' +'+(e.courses.length-2):''}</td>
+            <td style="font-family:'DM Mono',monospace">${e.count}</td>
+            <td>${sbar(e.quality,5)}</td>
+            <td>${sbar(e.engage,5)}</td>
+            <td>${sbar(e.meet,5)}</td>
+            <td>${e.recPct!==null?`<span style="font-weight:600;color:${e.recPct>=70?'#1E7A48':e.recPct>=50?'#9A5D0A':'#BE2E2E'}">${e.recPct}%</span>`:'—'}</td>
+            <td><span class="flag ${e.quality?flagCls(e.quality):'f-na'}">${e.quality?flagTxt(e.quality):'No data'}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+      ${totalPages>1?`<div class="pag"><span class="pag-info">${data.length} experts · page ${expertPage}/${totalPages}</span>${Array.from({length:totalPages},(_,i)=>`<button class="pag-btn${i+1===expertPage?' active':''}" onclick="goExpPage(${i+1})">${i+1}</button>`).join('')}</div>`:''}
+    </div>
+    <div class="card">
+      <div class="section-label">Top experts by quality score (min 2 responses)</div>
+      <div class="chart-box" style="height:${chartH}px"><canvas id="cExpBar" role="img" aria-label="Top experts bar chart">${top10.map(e=>e.name+': '+e.quality?.toFixed(2)).join(', ')}</canvas></div>
+    </div>`;
+
+  destroyCharts(['cExpBar']);
+  if (top10.length) {
+    charts.cExpBar=new Chart(document.getElementById('cExpBar'),{type:'bar',data:{labels:top10.map(e=>e.name.length>24?e.name.slice(0,24)+'…':e.name),datasets:[{data:top10.map(e=>parseFloat(e.quality.toFixed(2))),backgroundColor:top10.map(e=>e.quality>=4.2?'#78c0a8':e.quality>=3.4?'#d4c87a':'#f08080'),borderWidth:0,borderRadius:5}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:5,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}}},y:{grid:{display:false},ticks:{font:{size:11}}}}}});
+  }
+}
+
+function sortExp(col){
+  if(expertSortCol===col) expertSortDir=expertSortDir==='desc'?'asc':'desc';
+  else{expertSortCol=col;expertSortDir='desc';}
+  expertPage=1; renderExperts();
+}
+function goExpPage(p){expertPage=p;renderExperts();}
+
+function filterRows(tbodyId,search,cellIdx){
+  const rows=document.querySelectorAll('#'+tbodyId+' tr');
+  rows.forEach(row=>{row.style.display=row.cells[cellIdx]?.textContent.toLowerCase().includes(search.toLowerCase())?'':'none';});
+}
+
+/* ════════ COURSES ════════ */
+function renderCourses(){
+  const el=document.getElementById('tab-courses');
+  const byC={};
+  filteredRows.filter(r=>r.course).forEach(r=>{if(!byC[r.course])byC[r.course]=[];byC[r.course].push(r);});
+
+  const data=Object.entries(byC).map(([co,rows])=>{
+    const quality=avg(rows.map(r=>r.quality).filter(v=>v&&v>0));
+    const meet=avg(rows.map(r=>r.meetNeeds).filter(v=>v&&v>0));
+    const experts=[...new Set(rows.map(r=>r.expert).filter(Boolean))];
+    const years=[...new Set(rows.map(r=>r.year).filter(Boolean))].sort();
+    return {name:co,count:rows.length,quality,meet,experts,years};
+  }).sort((a,b)=>(b.quality||0)-(a.quality||0));
+
+  const bottom10=[...data].filter(c=>c.quality!==null&&c.count>=2).sort((a,b)=>a.quality-b.quality).slice(0,10);
+  const chartH=Math.max(280,bottom10.length*44+70);
+
+  el.innerHTML=`
+    <div class="card" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="section-label" style="margin:0">Course performance <span class="cnt-tag">${data.length} courses</span></div>
+        <input type="text" placeholder="Search course…" style="width:220px" oninput="filterRows('crseTbody',this.value,0)">
+      </div>
+      <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr>
+          <th>Course</th><th>Year(s)</th><th>Expert(s)</th>
+          <th>Responses</th><th>Avg Quality /5</th><th>Meets Needs /5</th><th>Status</th>
+        </tr></thead>
+        <tbody id="crseTbody">
+          ${data.map(c=>`<tr>
+            <td style="font-weight:500;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.name}">${c.name}</td>
+            <td>${c.years.map(y=>`<span class="ychip">Y${y}</span>`).join('')}</td>
+            <td style="font-size:11px;color:var(--text2);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.experts.join(', ')}">${c.experts.slice(0,2).join(', ')}${c.experts.length>2?' +'+(c.experts.length-2):''}</td>
+            <td style="font-family:'DM Mono',monospace">${c.count}</td>
+            <td>${sbar(c.quality,5)}</td>
+            <td>${sbar(c.meet,5)}</td>
+            <td><span class="flag ${c.quality?flagCls(c.quality):'f-na'}">${c.quality?flagTxt(c.quality):'No data'}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-label">Courses needing attention (lowest quality, min 2 responses)</div>
+      <div class="chart-box" style="height:${chartH}px"><canvas id="cCrseBar" role="img" aria-label="Bottom courses bar chart">${bottom10.map(c=>c.name+': '+c.quality?.toFixed(2)).join(', ')}</canvas></div>
+    </div>`;
+
+  destroyCharts(['cCrseBar']);
+  if (bottom10.length) {
+    charts.cCrseBar=new Chart(document.getElementById('cCrseBar'),{type:'bar',data:{labels:bottom10.map(c=>c.name.length>32?c.name.slice(0,32)+'…':c.name),datasets:[{data:bottom10.map(c=>parseFloat(c.quality.toFixed(2))),backgroundColor:bottom10.map(c=>c.quality>=4.2?'#78c0a8':c.quality>=3.4?'#d4c87a':'#f08080'),borderWidth:0,borderRadius:5}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:5,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  }
+}
+
+/* ════════ COMMENTS ════════ */
+function renderComments(){
+  const el=document.getElementById('tab-comments');
+  const skip=v=>!v||v.trim()===''||v.trim()==='-'||v.trim()==='.'||v.trim()==='N/a'||v.trim()==='na';
+
+  const improvements=filteredRows.filter(r=>!skip(r.improve));
+  const beneficial=filteredRows.filter(r=>!skip(r.beneficial));
+  const suggestions=filteredRows.filter(r=>!skip(r.suggestions)&&(r.suggestions||'').length>5);
+
+  const cmtCard=(title,items,cls)=>`
+    <div class="card">
+      <div class="section-label">${title} <span class="cnt-tag">${items.length}</span></div>
+      <div class="comment-col">
+        ${items.length?items.slice(0,40).map(r=>`
+          <div class="cmt ${cls}">
+            <div class="cmt-text">${r.improve||r.beneficial||r.suggestions}</div>
+            <div class="cmt-meta">${[r.expert,r.course,r.date,r.source].filter(Boolean).join(' · ')}</div>
+          </div>`).join(''):'<div class="no-data">No comments in this category.</div>'}
+      </div>
+    </div>`;
+
+  const impItems=improvements.map(r=>({...r,beneficial:'',suggestions:''}));
+  const benItems=beneficial.map(r=>({...r,improve:'',suggestions:''}));
+  const sugItems=suggestions.map(r=>({...r,beneficial:'',improve:''}));
+
+  el.innerHTML=`
+    <div class="g3">
+      ${cmtCard('What could be improved',impItems,'neg')}
+      ${cmtCard('What was most beneficial',benItems,'pos')}
+      ${cmtCard('Suggestions for experts',sugItems,'neu')}
+    </div>`;
+
+  // Fix the text rendering
+  el.querySelectorAll('.cmt-text').forEach((div,i)=>{
+    const allCommentRows=[...impItems,...benItems,...sugItems];
+    if(allCommentRows[i]) {
+      const r=allCommentRows[i];
+      div.textContent=r.improve||r.beneficial||r.suggestions||'';
+    }
+  });
+}
+
+function destroyCharts(ids){ids.forEach(id=>{if(charts[id]){try{charts[id].destroy();}catch(e){}delete charts[id];}});}
+</script>
+</body>
+</html>
