@@ -59,7 +59,7 @@ select:focus,input[type=text]:focus{border-color:var(--accent)}
 .sbar-fill{height:100%;border-radius:3px}.snum{font-size:12px;font-weight:600;min-width:30px;text-align:right;font-family:'DM Mono',monospace}
 .flag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap}
 .f-ok{background:var(--green-bg);color:var(--green)}.f-warn{background:var(--amber-bg);color:var(--amber)}.f-bad{background:var(--red-bg);color:var(--red)}.f-na{background:var(--surface2);color:var(--text3)}
-.comment-col{display:flex;flex-direction:column;gap:9px;max-height:440px;overflow-y:auto;padding-right:4px}
+.comment-col{display:flex;flex-direction:column;gap:9px;max-height:500px;overflow-y:auto;padding-right:4px}
 .comment-col::-webkit-scrollbar{width:4px}.comment-col::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 .cmt{background:var(--surface2);border-radius:var(--rs);padding:10px 12px;border-left:3px solid transparent}
 .cmt.pos{border-left-color:var(--green)}.cmt.neg{border-left-color:var(--red)}.cmt.neu{border-left-color:var(--border)}
@@ -71,7 +71,7 @@ select:focus,input[type=text]:focus{border-color:var(--accent)}
 .ychip{display:inline-block;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin:1px}
 .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:10px;font-size:11px;color:var(--text2)}
 .legend-item{display:flex;align-items:center;gap:5px}.legend-dot{width:10px;height:10px;border-radius:2px}
-.data-note{font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:8px 14px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.data-note{font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:8px 14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .data-note a{color:var(--accent);text-decoration:none}.data-note a:hover{text-decoration:underline}
 .no-data{color:var(--text3);font-size:12px;text-align:center;padding:28px 0}
 .ctx-banner{font-size:11px;color:var(--blue);background:var(--blue-bg);border:1px solid #b8d4f0;border-radius:var(--rs);padding:6px 12px;margin-bottom:14px;display:none}
@@ -96,7 +96,7 @@ select:focus,input[type=text]:focus{border-color:var(--accent)}
     <a href="https://docs.google.com/spreadsheets/d/1-QbGinrW4tHVuN-S41gXSK4Qn8ySTfI23cifT4xcevU/edit" target="_blank">Y2 Form</a> ·
     <a href="https://docs.google.com/spreadsheets/d/1Yyt7Rl8HHoVDHUuJED4BEHVPz6dF-nmu9-J0xvZx1t8/edit" target="_blank">Y1 Form</a> ·
     <a href="https://docs.google.com/spreadsheets/d/1nR11cUWPksXrzQvg2lQn2Y-862s4699AAsEXOUcEtjU/edit" target="_blank">Y3 Form</a>
-    · Sep 2025 onwards · Auto-refreshes every 30 min
+    · Responses from Sep 1 2025 · Auto-refreshes every 30 min
   </div>
 
   <div class="filters-bar">
@@ -140,7 +140,10 @@ select:focus,input[type=text]:focus{border-color:var(--accent)}
 </div>
 
 <script>
-/* ── MASTER COURSE CATALOGUE ── */
+/* ══════════════════════════════════════════════════════
+   MASTER COURSE CATALOGUE — official codes + names
+   Source: Educational Handbook 2025-2026 + Expert List
+   ══════════════════════════════════════════════════════ */
 const COURSES={
   '0101EE':{name:'Entrepreneurial Research 1',year:1,experts:['Sinziana Medvetchi']},
   '0102EE':{name:'Entrepreneurial Core Theory 1',year:1,experts:['Valentin Maior']},
@@ -195,14 +198,103 @@ const COURSES={
   '0403ISK':{name:'Diversity and Culture Year 4',year:4,experts:['Peer Stoop']},
 };
 
-/* ── EXPERT CANONICALISATION ── */
+/* ══════════════════════════════════════════════════════
+   GOOGLE FORM EXPERT LOOKUP TABLE
+   Built from exact column headers in each Google Form.
+   Key = rawCourseName (exact string from form) → canonical expert name(s)
+   This completely replaces the broken keyword-matching logic.
+   Multiple experts for same course = taught to different teams.
+   ══════════════════════════════════════════════════════ */
+const GFORM_EXPERTS = {
+  // Y1 Form — from "How engaging was the expert? [ExpertName (CourseName)]" columns
+  1: {
+    'Self Managing Leadership Workshop': ['Anca Amariei','Paul Calin'],  // 2 TCs, different teams
+    'Entrepreneurial Core theory 1':     ['Valentin Maior'],
+    'Understanding innovation & design': ['Cristian Gaidenic'],
+    'English writing':                   ['Sinziana Medvetchi'],
+    'Project management basics':         ['Robert Iancu'],
+    'Dialogue':                          ['Andreea Rotaru','Larisa Petrini'],  // 2 TCs, different teams
+    'Presentation Skills':               ['Radu Glont'],
+    'Business etiquette':                ['Peer Stoop'],
+  },
+  // Y2 Form — from engage columns (confirmed from live data)
+  2: {
+    'Entrepreneurial research 2':        ['Alexandrina Pauceanu'],
+    'Entrepreneurial Core Theory':       ['Valentin Maior'],
+    'Law':                               ['Ana Maria Andronic'],
+    'English':                           ['Sinziana Medvetchi'],
+    'Finance':                           ['Madalina Okur','Alexandru Ghita'],  // 2 experts
+    'Individual Breakthrough':           ['Anca Amariei','Matei Stanculescu'],
+    'Diversity and Culture':             ['Peer Stoop'],
+    'Digital Skills':                    ['Raluca Georgescu'],
+    'Building performing teams':         ['Roberto Warmedam'],
+    'Building Performing Teams':         ['Roberto Warmedam'],
+  },
+  // Y3 Form — from engage columns (confirmed from live data)
+  3: {
+    'Entrepreneurial Core theory':       ['Ionut Fodoca'],
+    'Advanced Entrepreneurial Research': ['Alexandrina Pauceanu'],
+    'Leadership Strategy':               ['Magor Csibi'],
+    'Individual Breakthrough':           ['Matei Stanculescu'],
+    'Finance Founders vs Funders':       ['Alexandra Florea'],
+    'Finance - Funders vs Founders':     ['Alexandra Florea'],
+    'Finance':                           ['Madalina Okur'],
+    'Sales':                             ['Delia Necula'],
+  },
+};
+
+/* ══════════════════════════════════════════════════════
+   COURSE CODE MAPPING — raw name → official code
+   Each entry is year-specific where needed.
+   ══════════════════════════════════════════════════════ */
+const COURSE_CODE_MAP = {
+  // Y1 Google Form raw names → code
+  1: {
+    'Self Managing Leadership Workshop': '0101LE',
+    'Entrepreneurial Core theory 1':     '0102EE',
+    'Understanding innovation & design': '0103EE',
+    'English writing':                   '0103ISK',
+    'Project management basics':         '0104ISK',
+    'Dialogue':                          '0104LE',
+    'Presentation Skills':               '0105ISK',
+    'Business etiquette':                '0107ISK',
+  },
+  // Y2 Google Form raw names → code
+  2: {
+    'Entrepreneurial research 2':        '0201EE',
+    'Entrepreneurial Core Theory':       '0203EE',
+    'Law':                               '0201ISK',
+    'Finance':                           '0202ISK',
+    'Individual Breakthrough':           '0202LE',
+    'English':                           '0203ISK',
+    'Diversity and Culture':             '0204ISK',
+    'Digital Skills':                    '0205EE',
+    'Building performing teams':         '0201LE',
+    'Building Performing Teams':         '0201LE',
+  },
+  // Y3 Google Form raw names → code
+  3: {
+    'Entrepreneurial Core theory':       '0302EE',
+    'Advanced Entrepreneurial Research': '0301EE',
+    'Leadership Strategy':               '0301LE',
+    'Individual Breakthrough':           '0302LE',
+    'Finance - Funders vs Founders':     '0303ISK',
+    'Finance Founders vs Funders':       '0303ISK',
+    'Finance':                           '0301ISK',
+    'Sales':                             '0304EE',
+  },
+};
+
+/* ══════════════════════════════════════════════════════
+   EXPERT NAME CANONICALISATION
+   ══════════════════════════════════════════════════════ */
 const EC={
   'pauceanu alex':'Alexandrina Pauceanu','alexandrina pauceanu':'Alexandrina Pauceanu','pauceanu alexandrina':'Alexandrina Pauceanu',
   'maior valentin':'Valentin Maior','valentin maior':'Valentin Maior',
   'andronic ana maria':'Ana Maria Andronic','ana maria andronic':'Ana Maria Andronic',
   'medvetchi sinziana':'Sinziana Medvetchi','sinziana medvetchi':'Sinziana Medvetchi','medvetchi sinziana ':'Sinziana Medvetchi','sinziana medvetchii':'Sinziana Medvetchi',
-  'okur madalina':'Madalina Okur','madalina okur':'Madalina Okur',
-  'ghita alexandru':'Alexandru Ghita','alexandru ghita':'Alexandru Ghita',
+  'okur madalina':'Madalina Okur','madalina okur':'Madalina Okur','madalina':'Madalina Okur',
+  'ghita alexandru':'Alexandru Ghita','alexandru ghita':'Alexandru Ghita','alex ghita':'Alexandru Ghita',
   'stoop peer':'Peer Stoop','peer stoop':'Peer Stoop',
   'statescu monica':'Monica Statescu','monica statescu':'Monica Statescu',
   'warmedam roberto':'Roberto Warmedam','roberto warmedam':'Roberto Warmedam','roberto':'Roberto Warmedam',
@@ -215,7 +307,7 @@ const EC={
   'vilceanu doina':'Doina Vilceanu','doina vilceanu':'Doina Vilceanu',
   'florea alexandra':'Alexandra Florea','alexandra florea':'Alexandra Florea',
   'stanculescu anca':'Anca Amariei','anca stanculescu':'Anca Amariei','anca amariei':'Anca Amariei',
-  'anca si matei stanculescu':'Anca & Matei Stanculescu','anca amariei + matei stanculescu':'Anca & Matei Stanculescu',
+  'anca si matei stanculescu':'Anca & Matei Stanculescu',
   'stanculescu matei':'Matei Stanculescu','matei stanculescu':'Matei Stanculescu',
   'calin paul':'Paul Calin','paul calin':'Paul Calin',
   'rotaru andreea':'Andreea Rotaru','andreea rotaru':'Andreea Rotaru',
@@ -226,90 +318,37 @@ const EC={
   'popescu florentin':'Florentin Popescu','florentin popescu':'Florentin Popescu',
   'csibi magor':'Magor Csibi','magor csibi':'Magor Csibi',
   'brabete valentin':'Valentin Brabete','valentin brabete':'Valentin Brabete',
-  'vlad trandafir':'Corina Vladut','corina vladut':'Corina Vladut',
+  'corina vladut':'Corina Vladut','vladut corina':'Corina Vladut',
   'lungu laura':'Laura Lungu','laura lungu':'Laura Lungu',
 };
 const canonE=r=>{if(!r||!r.trim())return'';return EC[r.trim().toLowerCase()]||r.trim();};
 
-/* ── COURSE STANDARDISATION MAP ── */
-const CM=[
-  // Jotform codes — exact match first
-  {p:/0101EE/i,c:'0101EE'},{p:/0102EE/i,c:'0102EE'},{p:/0103EE/i,c:'0103EE'},{p:/0104EE/i,c:'0104EE'},
-  {p:/0105EE/i,c:'0105EE'},{p:/0106EE/i,c:'0106EE'},{p:/0107EE/i,c:'0107EE'},
-  {p:/0101ISK/i,c:'0101ISK'},{p:/0102ISK/i,c:'0102ISK'},{p:/0103ISK/i,c:'0103ISK'},
-  {p:/0104ISK/i,c:'0104ISK'},{p:/0105ISK/i,c:'0105ISK'},{p:/0106ISK/i,c:'0106ISK'},{p:/0107ISK/i,c:'0107ISK'},
-  {p:/0101LE/i,c:'0101LE'},{p:/0102LE/i,c:'0102LE'},{p:/0104LE/i,c:'0104LE'},
-  {p:/0201EE/i,c:'0201EE'},{p:/0202EE/i,c:'0202EE'},{p:/0203EE/i,c:'0203EE'},{p:/0204EE/i,c:'0204EE'},
-  {p:/0205EE/i,c:'0205EE'},{p:/0206EE/i,c:'0206EE'},{p:/0207EE/i,c:'0207EE'},{p:/0208EE/i,c:'0208EE'},
-  {p:/0209EE/i,c:'0209EE'},
-  {p:/020\s*ISK.*Law|0201ISK/i,c:'0201ISK'},{p:/0202ISK/i,c:'0202ISK'},{p:/0203ISK/i,c:'0203ISK'},
-  {p:/0204ISK/i,c:'0204ISK'},{p:/0205ISK/i,c:'0205ISK'},{p:/0206ISK/i,c:'0206ISK'},
-  {p:/0201LE/i,c:'0201LE'},{p:/0202LE/i,c:'0202LE'},{p:/0204LE/i,c:'0204LE'},
-  {p:/0301EE/i,c:'0301EE'},{p:/0302EE/i,c:'0302EE'},{p:/0303EE/i,c:'0303EE'},{p:/0304EE/i,c:'0304EE'},
-  {p:/0305EE/i,c:'0305EE'},{p:/0306EE/i,c:'0306EE'},
-  {p:/0301ISK/i,c:'0301ISK'},{p:/0302ISK/i,c:'0302ISK'},{p:/0303ISK/i,c:'0303ISK'},
-  {p:/0301LE/i,c:'0301LE'},{p:/0302LE/i,c:'0302LE'},
-  {p:/0401EE/i,c:'0401EE'},{p:/0402EE/i,c:'0402EE'},{p:/0403EE/i,c:'0403EE'},
-  {p:/0401ISK/i,c:'0401ISK'},{p:/0402ISK/i,c:'0402ISK'},{p:/0403ISK/i,c:'0403ISK'},
-  // Y1 Google Form names
-  {p:/self.?manag|managing leadership/i,c:'0101LE',y:1},
-  {p:/entrepreneurial core.?theory.?1|core theory 1/i,c:'0102EE',y:1},
-  {p:/understanding innovation|innovation.*design/i,c:'0103EE',y:1},
-  {p:/english.?writ|english essays|B2/i,c:'0103ISK',y:1},
-  {p:/project.?manag/i,c:'0104ISK',y:1},
-  {p:/^dialogue$/i,c:'0104LE',y:1},
-  {p:/presentation.?skill/i,c:'0105ISK',y:1},
-  {p:/business.?etiquette/i,c:'0107ISK',y:1},
-  {p:/individual.?breakthrough/i,c:'0102LE',y:1},
-  {p:/diversity.?and.?culture|diversity.*culture/i,c:'0106ISK',y:1},
-  // Y2 Google Form names
-  {p:/entrepreneurial.?research.?2|research.?2/i,c:'0201EE',y:2},
-  {p:/entrepreneurial.?research.?3|research.?3/i,c:'0202EE',y:2},
-  {p:/entrepreneurial.?core.?theory.?2|core theory 2/i,c:'0203EE',y:2},
-  {p:/value.?proposition/i,c:'0204EE',y:2},
-  {p:/digital.?skills.*AI|AI.*changing/i,c:'0209EE',y:2},
-  {p:/digital.?skills/i,c:'0205EE',y:2},
-  {p:/^law$/i,c:'0201ISK',y:2},
-  {p:/^finance$/i,c:'0202ISK',y:2},
-  {p:/english.?academ|writing.?C1|academic.?writing/i,c:'0203ISK',y:2},
-  {p:/diversity.?and.?culture|diversity.*culture/i,c:'0204ISK',y:2},
-  {p:/micro.*macro|macro.*micro/i,c:'0205ISK',y:2},
-  {p:/trendwatch/i,c:'0206ISK',y:2},
-  {p:/building.?perform|building.?high/i,c:'0201LE',y:2},
-  {p:/individual.?breakthrough/i,c:'0202LE',y:2},
-  {p:/^english$/i,c:'0203ISK',y:2},
-  {p:/entrepreneurial.?research/i,c:'0201EE',y:2},
-  {p:/core.?theory/i,c:'0203EE',y:2},
-  // Y3 Google Form names
-  {p:/advanced.?entrepreneurial|advanced.*research/i,c:'0301EE',y:3},
-  {p:/innovation.?leader/i,c:'0303EE',y:3},
-  {p:/founders?.?vs?.?funders?|funders?.?vs?.?founders?/i,c:'0303ISK',y:3},
-  {p:/leadership.?strategy/i,c:'0301LE',y:3},
-  {p:/^sales$/i,c:'0304EE',y:3},
-  {p:/^finance$/i,c:'0301ISK',y:3},
-  {p:/diversity/i,c:'0302ISK',y:3},
-  {p:/individual.?breakthrough/i,c:'0302LE',y:3},
-  {p:/core.?theory/i,c:'0302EE',y:3},
-];
-
-function stdCourse(raw,yr){
-  if(!raw) return null;
-  const r=raw.trim();
-  for(const m of CM){if(m.y&&m.y!==yr)continue;if(m.p.test(r))return m.c;}
-  for(const m of CM){if(m.y)continue;if(m.p.test(r))return m.c;}
+/* ══════════════════════════════════════════════════════
+   JOTFORM COURSE CODE STANDARDISATION
+   For Jotform, courses already have codes in the Course column.
+   We parse the code from the string directly.
+   ══════════════════════════════════════════════════════ */
+function stdJotformCourse(raw) {
+  if (!raw) return null;
+  // Extract code like "0201EE" from strings like "0201EE - Entrepreneurial Research 2"
+  const m = raw.match(/^(0\d{3}[A-Z]+)/);
+  if (m) return m[1];
   return null;
 }
 
-/* Expert-course correction: fix known mismatches in source data */
-function fixCourse(yr,expert,code){
-  // Y2: Alexandrina Pauceanu tagged as Entrepreneurial Core Theory → correct to Entrepreneurial Research 2
-  if(yr===2&&expert==='Alexandrina Pauceanu'&&code==='0203EE') return '0201EE';
-  // Y2: Valentin Maior tagged as Entrepreneurial Research → correct to Core Theory 2
-  if(yr===2&&expert==='Valentin Maior'&&code==='0201EE') return '0203EE';
+/* ══════════════════════════════════════════════════════
+   EXPERT-COURSE CORRECTION for Jotform data
+   Fix known mismatches where expert is tagged to wrong course
+   ══════════════════════════════════════════════════════ */
+function fixJotformCourse(yr, expertCanon, code) {
+  if (yr===2 && expertCanon==='Alexandrina Pauceanu' && code==='0203EE') return '0201EE';
+  if (yr===2 && expertCanon==='Valentin Maior' && code==='0201EE') return '0203EE';
   return code;
 }
 
-/* ── FETCH & NORMALISE ── */
+/* ══════════════════════════════════════════════════════
+   DATA SOURCES
+   ══════════════════════════════════════════════════════ */
 const SHEETS=[
   {id:'1KOTOAG-pKHIGEToNJG2XD1DQSJU8_hrPNhGEci0XKco',gid:'43708493',src:'Jotform',type:'j'},
   {id:'1-QbGinrW4tHVuN-S41gXSK4Qn8ySTfI23cifT4xcevU',gid:'87831260',src:'Y2 Form',type:'g',yr:2},
@@ -318,7 +357,6 @@ const SHEETS=[
 ];
 const CUTOFF=new Date('2025-09-01');
 const SM={Excellent:5,'Very Good':4,Good:3,Fair:2,Poor:1};
-const EM={'Extremely engaging':5,'Very engaging':4,'Engaging':3,'Somehow engaging':2,'Not engaging':1};
 
 function parseCSV(t){
   const lines=t.split('\n').filter(l=>l.trim());
@@ -338,58 +376,119 @@ function mkRow(date,src,yr,team,code,expert,q,mN,en,rec,ben,imp,sug){
     beneficial:ben||'',improve:imp||'',suggestions:sug||''};
 }
 
+/* ══════════════════════════════════════════════════════
+   NORMALISE JOTFORM
+   ══════════════════════════════════════════════════════ */
 function normJ(rows){
   return rows.map(r=>{
     const d=new Date(r['Submission Date']);
     if(isNaN(d)||d<CUTOFF)return null;
     const yr=parseInt(r['Year'])||null;
     const ex=canonE(r['Expert']||'');
-    let code=stdCourse(r['Course']||'',yr);
-    if(code)code=fixCourse(yr,ex,code);
+    let code=stdJotformCourse(r['Course']||'');
+    if(code)code=fixJotformCourse(yr,ex,code);
     if(!code)code=r['Course']||'';
     const q=parseInt(r['How would you rate the overall quality of the course/workshop? ']||r['How would you rate the overall quality of the course/workshop?']||'')||null;
-    return mkRow(d.toISOString().slice(0,10),'Jotform',yr,r['Team']||'',code,ex,q,
+    return mkRow(
+      d.toISOString().slice(0,10),'Jotform',yr,r['Team']||'',code,ex,q,
       parseInt(r['How well did the course/workshop meet your learning needs and goals?']||'')||null,
       parseInt(r['How engaging was the expert?']||'')||null,
       r['Would you recommend this expert for future courses/workshops?']==='Yes'?true:r['Would you recommend this expert for future courses/workshops?']==='No'?false:null,
       r['What aspects of the course/workshop did you find most beneficial?']||'',
       r['What areas of the course/workshop do you think could be improved?']||'',
-      r['Do you have any suggestions for the expert to improve future sessions?']||'');
+      r['Do you have any suggestions for the expert to improve future sessions?']||''
+    );
   }).filter(Boolean);
 }
 
-function normG(rows,yr){
+/* ══════════════════════════════════════════════════════
+   NORMALISE GOOGLE FORM  ← COMPLETELY REWRITTEN
+   
+   Key fix: use GFORM_EXPERTS and COURSE_CODE_MAP exact lookups
+   instead of keyword matching. This eliminates all collisions.
+   
+   For courses taught by multiple experts (e.g. Dialogue),
+   we create one row per student per expert — each representing
+   that student's feedback, attributed to both experts.
+   The quality rating is the same (student rated the course once).
+   ══════════════════════════════════════════════════════ */
+function normG(rows, yr){
   const out=[];
+  const expertMap = GFORM_EXPERTS[yr] || {};
+  const codeMap = COURSE_CODE_MAP[yr] || {};
+  
   rows.forEach(r=>{
     const d=new Date(r['Timestamp']);
     if(isNaN(d)||d<CUTOFF)return;
-    Object.keys(r).forEach(col=>{
-      const m=col.match(/How would you rate the overall quality.*?\[(.+?)\]/);
-      if(!m)return;
-      const rc=m[1].trim();
-      const quality=SM[r[col]]||null;
-      if(!quality)return;
-      let code=stdCourse(rc,yr);
-      let exRaw='',en=null;
-      const eCol=Object.keys(r).find(k=>k.includes('How engaging was the expert?')&&k.includes('(')&&
-        k.toLowerCase().includes(rc.toLowerCase().split(' ')[0].toLowerCase()));
-      if(eCol){const em=eCol.match(/\[(.+?)\s*\((.+?)\)\]/);if(em)exRaw=em[1].trim();en=EM[r[eCol]]||null;}
-      const ex=canonE(exRaw);
-      if(code)code=fixCourse(yr,ex,code);
-      if(!code)code=rc;
-      const rCol=Object.keys(r).find(k=>k.includes('Would you recommend')&&k.includes('['+rc+']'));
-      const rec=rCol?(r[rCol]==='Yes'?true:r[rCol]==='No'?false:null):null;
-      const mCol=Object.keys(r).find(k=>k.includes('How well did the course')&&k.includes('['+rc+']'));
-      const mN=mCol?(SM[r[mCol]]||null):null;
-      const cCols=Object.keys(r).filter(k=>k.trim()===rc);
-      const sug=cCols.length?r[cCols[0]]:'';
-      out.push(mkRow(d.toISOString().slice(0,10),'Y'+yr+' Form',yr,'',code,ex,quality,mN,en,rec,'','',sug));
+    
+    // Get engagement ratings per expert from columns
+    const engageByExpert = {};
+    Object.keys(r).forEach(col => {
+      if (!col.includes('How engaging was the expert?')) return;
+      const m = col.match(/\[(.+?)\s*\((.+?)\)\]/);
+      if (!m) return;
+      const expertRaw = m[1].trim();
+      const expertCanon = canonE(expertRaw);
+      const engagement = {
+        'Extremely engaging':5,'Very engaging':4,'Engaging':3,'Somehow engaging':2,'Not engaging':1
+      }[r[col]] || null;
+      if (expertCanon) engageByExpert[expertCanon] = engagement;
+    });
+    
+    // Get recommendation per expert
+    const recByExpert = {};
+    Object.keys(r).forEach(col => {
+      if (!col.includes('Would you recommend this expert')) return;
+      const m = col.match(/\[(.+?)\s*\((.+?)\)\]/);
+      if (!m) return;
+      const expertCanon = canonE(m[1].trim());
+      if (expertCanon) recByExpert[expertCanon] = r[col]==='Yes'?true:r[col]==='No'?false:null;
+    });
+    
+    // Process each quality rating column
+    Object.keys(r).forEach(col => {
+      const m = col.match(/How would you rate the overall quality.*?\[(.+?)\]/);
+      if (!m) return;
+      const rawCourse = m[1].trim();
+      if (rawCourse === 'Row 10') return; // skip empty placeholder column
+      
+      const quality = SM[r[col]] || null;
+      if (!quality) return; // skip blank ratings
+      
+      // Get course code from exact lookup table
+      const code = codeMap[rawCourse];
+      if (!code) return; // skip unknown courses
+      
+      // Get experts for this course from exact lookup table
+      const experts = expertMap[rawCourse] || [];
+      
+      // Get meet needs rating
+      const mCol = Object.keys(r).find(k => k.includes('How well did the course') && k.includes('['+rawCourse+']'));
+      const meetNeeds = mCol ? (SM[r[mCol]] || null) : null;
+      
+      // Get comment for this course
+      const cCols = Object.keys(r).filter(k => k.trim() === rawCourse);
+      const sug = cCols.length ? r[cCols[0]] : '';
+      
+      if (experts.length === 0) {
+        // No known expert — create one row with no expert
+        out.push(mkRow(d.toISOString().slice(0,10),'Y'+yr+' Form',yr,'',code,'',quality,meetNeeds,null,null,'','',sug));
+      } else {
+        // Create one row per expert (different teams taught by different experts)
+        experts.forEach(expertCanon => {
+          const en = engageByExpert[expertCanon] || null;
+          const rec = recByExpert[expertCanon] || null;
+          out.push(mkRow(d.toISOString().slice(0,10),'Y'+yr+' Form',yr,'',code,expertCanon,quality,meetNeeds,en,rec,'','',sug));
+        });
+      }
     });
   });
   return out;
 }
 
-/* ── STATE ── */
+/* ══════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════ */
 let allRows=[],filteredRows=[],activeTab='overview';
 let expSortCol='quality',expSortDir='desc',expPage=1;
 const PER=20;
@@ -412,15 +511,18 @@ async function doRefresh(){
   if(fresh.length>0){
     allRows=fresh;buildFilters();applyFilters();
     setU('Live · '+new Date().toLocaleString('ro-RO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}));
-  }else setU('Embedded data · live fetch unavailable');
+  }else setU('Live fetch unavailable');
   btn.disabled=false;icon.innerHTML='↻';
   setTimeout(doRefresh,30*60*1000);
 }
 function setU(m){document.getElementById('updatedPill').textContent=m;}
 
-/* ── SMART FILTER CASCADE ── */
-function buildFilters(subRows){
-  const src=subRows||allRows;
+/* ══════════════════════════════════════════════════════
+   SMART CASCADING FILTERS
+   Year → Expert (filtered to year) → Course (filtered to expert)
+   ══════════════════════════════════════════════════════ */
+function buildFilters(sub){
+  const src=sub||allRows;
   const experts=[...new Set(src.filter(r=>r.expert).map(r=>r.expert))].sort();
   const courses=[...new Set(src.filter(r=>r.courseName).map(r=>r.courseName))].sort();
   const fe=document.getElementById('fExpert'),fc=document.getElementById('fCourse');
@@ -434,14 +536,12 @@ function onYearChange(){
   const sub=yr?allRows.filter(r=>r.year===parseInt(yr)):allRows;
   document.getElementById('fExpert').value='';
   document.getElementById('fCourse').value='';
-  buildFilters(sub);
-  applyFilters();
+  buildFilters(sub);applyFilters();
 }
 
 function onExpertChange(){
   const yr=document.getElementById('fYear').value;
   const ex=document.getElementById('fExpert').value;
-  // Rebuild course dropdown to only show courses this expert teaches in this year
   let sub=allRows;
   if(yr)sub=sub.filter(r=>r.year===parseInt(yr));
   if(ex)sub=sub.filter(r=>r.expert===ex);
@@ -479,7 +579,7 @@ function resetFilters(){
   buildFilters();applyFilters();
 }
 
-/* ── HELPERS ── */
+/* ══════ HELPERS ══════ */
 function avg(a){const n=a.filter(x=>x!==null&&x!==0&&!isNaN(x));return n.length?n.reduce((a,b)=>a+b,0)/n.length:null;}
 function sc(s){return s>=4.2?'#1E7A48':s>=3.4?'#9A5D0A':'#BE2E2E';}
 function fc2(s){return s>=4.2?'f-ok':s>=3.2?'f-warn':'f-bad';}
@@ -489,10 +589,10 @@ function sbar(s,m){
   const c=sc(s);
   return`<div class="sbar-wrap"><div class="sbar"><div class="sbar-fill" style="width:${Math.min(100,s/m*100).toFixed(1)}%;background:${c}"></div></div><span class="snum" style="color:${c}">${s.toFixed(2)}</span></div>`;
 }
-function skip(v){return!v||v.trim().length<4||['-','.','..','/','n/a','na','nothing','none','no','nope','-'].includes(v.trim().toLowerCase());}
+function skip(v){return!v||v.trim().length<4||['-','.','..','/','n/a','na','nothing','none','no','nope'].includes(v.trim().toLowerCase());}
 function dC(ids){ids.forEach(id=>{if(CH[id]){try{CH[id].destroy();}catch(e){}delete CH[id];}});}
 
-/* ── KPIs ── */
+/* ══════ KPIs ══════ */
 function renderKPIs(){
   const t=filteredRows.length;
   const qs=filteredRows.map(r=>r.quality).filter(v=>v&&v>0);
@@ -519,7 +619,7 @@ function renderAlerts(){
   document.getElementById('alertZone').innerHTML=bad.length?`<div class="alert"><div class="alert-dot">!</div><div class="alert-text">Action needed — ${bad.length} expert(s) below 3.0/5: ${bad.join('; ')}</div></div>`:'';
 }
 
-/* ── TABS ── */
+/* ══════ TABS ══════ */
 function switchTab(tab,btn){
   activeTab=tab;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
@@ -533,7 +633,7 @@ function renderCurrentTab(){
   else if(activeTab==='comments')renderComments();
 }
 
-/* ── OVERVIEW ── */
+/* ══════ OVERVIEW ══════ */
 function renderOverview(){
   const el=document.getElementById('tab-overview');
   const qs=filteredRows.filter(r=>r.quality&&r.quality>0);
@@ -573,7 +673,7 @@ function renderOverview(){
   CH.cS=new Chart(document.getElementById('cS'),{type:'doughnut',data:{labels:sl,datasets:[{data:sl.map(s=>sc2[s]),backgroundColor:['#C4581E','#1A5FA8','#1E7A48','#9A5D0A'],borderWidth:3,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,padding:10}}}}});
 }
 
-/* ── EXPERTS ── */
+/* ══════ EXPERTS ══════ */
 function renderExperts(){
   const el=document.getElementById('tab-experts');
   const byE={};
@@ -605,7 +705,7 @@ function renderExperts(){
           ${pg.map(e=>`<tr>
             <td style="font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.name}</td>
             <td>${e.years.map(y=>`<span class="ychip">Y${y}</span>`).join('')}</td>
-            <td style="font-size:11px;color:var(--text2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.courses.map(c=>c.split('—')[1]||c).join(', ')}">${e.courses.slice(0,2).map(c=>c.split('—')[1]?.trim()||c).join(', ')}${e.courses.length>2?' +'+(e.courses.length-2):''}</td>
+            <td style="font-size:11px;color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.courses.map(c=>c.split('—')[1]||c).join(', ')}">${e.courses.slice(0,2).map(c=>(c.split('—')[1]||c).trim()).join(', ')}${e.courses.length>2?' +'+(e.courses.length-2):''}</td>
             <td style="font-family:'DM Mono',monospace">${e.count}</td>
             <td>${sbar(e.quality,5)}</td><td>${sbar(e.engage,5)}</td><td>${sbar(e.meet,5)}</td>
             <td>${e.recPct!==null?`<span style="font-weight:600;color:${e.recPct>=70?'#1E7A48':e.recPct>=50?'#9A5D0A':'#BE2E2E'}">${e.recPct}%</span>`:'—'}</td>
@@ -626,7 +726,7 @@ function srtE(col){if(expSortCol===col)expSortDir=expSortDir==='desc'?'asc':'des
 function gEP(p){expPage=p;renderExperts();}
 function fTb(id,s,ci){document.querySelectorAll('#'+id+' tr').forEach(r=>{r.style.display=r.cells[ci]?.textContent.toLowerCase().includes(s.toLowerCase())?'':'none';});}
 
-/* ── COURSES ── */
+/* ══════ COURSES ══════ */
 function renderCourses(){
   const el=document.getElementById('tab-courses');
   const byC={};
@@ -653,7 +753,7 @@ function renderCourses(){
             <td style="font-family:'DM Mono',monospace;font-size:11px;white-space:nowrap;color:var(--text2)">${c.code}</td>
             <td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.shortName}">${c.shortName}</td>
             <td>${c.years.map(y=>`<span class="ychip">Y${y}</span>`).join('')}</td>
-            <td style="font-size:11px;color:var(--text2);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.experts.join(', ')}">${c.experts.slice(0,2).join(', ')}${c.experts.length>2?' +'+(c.experts.length-2):''}</td>
+            <td style="font-size:11px;color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.experts.join(', ')}">${c.experts.slice(0,2).join(', ')}${c.experts.length>2?' +'+(c.experts.length-2):''}</td>
             <td style="font-family:'DM Mono',monospace">${c.count}</td>
             <td>${sbar(c.quality,5)}</td><td>${sbar(c.meet,5)}</td>
             <td><span class="flag ${c.quality?fc2(c.quality):'f-na'}">${c.quality?ft(c.quality):'No data'}</span></td>
@@ -669,7 +769,7 @@ function renderCourses(){
   if(b10.length)CH.cCB=new Chart(document.getElementById('cCB'),{type:'bar',data:{labels:b10.map(c=>c.shortName.length>34?c.shortName.slice(0,34)+'…':c.shortName),datasets:[{data:b10.map(c=>parseFloat(c.quality.toFixed(2))),backgroundColor:b10.map(c=>c.quality>=4.2?'#78c0a8':c.quality>=3.4?'#d4c87a':'#f08080'),borderWidth:0,borderRadius:5}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:5,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
 }
 
-/* ── COMMENTS ── */
+/* ══════ COMMENTS ══════ */
 function renderComments(){
   const el=document.getElementById('tab-comments');
   const imp=filteredRows.filter(r=>!skip(r.improve));
@@ -679,10 +779,10 @@ function renderComments(){
     <div class="card">
       <div class="section-label">${title} <span class="cnt-tag">${items.length}</span></div>
       <div class="comment-col">
-        ${items.length?items.slice(0,40).map(r=>`
+        ${items.length?items.slice(0,50).map(r=>`
           <div class="cmt ${cls}">
             <div class="cmt-text">${(tf(r)||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-            <div class="cmt-meta">${[r.expert,r.courseCode?r.courseCode+' '+r.courseShort:'',r.date].filter(Boolean).join(' · ')}</div>
+            <div class="cmt-meta">${[r.expert,r.courseCode?r.courseCode+' · '+r.courseShort:'',r.date].filter(Boolean).join(' · ')}</div>
           </div>`).join(''):'<div class="no-data">No comments.</div>'}
       </div>
     </div>`;
